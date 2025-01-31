@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Username Generator - Terminal</title>
+    <style>
+        body {
+            background-color: black;
+            color: #0F0;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .terminal {
+            background-color: #000;
+            border: 2px solid #0F0;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0,255,0,0.5);
+        }
+        .prompt {
+            color: #0F0;
+        }
+        .command {
+            color: #FF0;
+        }
+        .result {
+            color: #0FF;
+        }
+        .length-valid {
+            color: #0F0;
+        }
+        .length-warning {
+            color: #FF0;
+        }
+        .length-error {
+            color: #F00;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="prompt">
+            root@username-generator:~$ <span class="command">./generate_username.sh</span>
+        </div>
+        <div>
+            <p>==== Username Generator v2.0 ====</p>
+            <p>Select Categories:</p>
+            <label><input type="checkbox" name="category" value="prefix" checked>Prefix</label>
+            <label><input type="checkbox" name="category" value="country" checked>Region</label>
+            <label><input type="checkbox" name="category" value="object" checked>Object</label>
+            <label><input type="checkbox" name="category" value="animal" checked>Animal</label>
+            <label><input type="checkbox" name="category" value="vehicle" checked>Vehicle</label>
+        </div>
+        <button onclick="generateUsername()" class="prompt">
+            [GENERATE]
+        </button>
+        <div id="result" class="result"></div>
+        <div class="prompt">
+            root@username-generator:~$ 
+        </div>
+    </div>
+
+    <script>
+        const categories = {
+            prefix: ['hebat', 'pintar', 'keren', 'cepat', 'riang', 'teknologi', 'super', 'mega', 'emas'],
+            country: ['nusantara', 'jawa', 'sumatera', 'bali', 'papua'],
+            object: ['laptop', 'kamera', 'ponsel', 'buku', 'jam'],
+            animal: ['kucing', 'anjing', 'kuda', 'gajah', 'harimau'],
+            vehicle: ['kawasaki', 'toyota', 'suzuki', 'mercy', 'bmw', 'honda', 'yamaha', 'harley', 'vespa', 'mitsubishi']
+        };
+
+        const memorableEndings = ['dev', 'net', 'pro', 'ace', 'gen', 'hub', 'web', 'id'];
+
+        function generateUsername() {
+            const selectedCategories = Array.from(document.querySelectorAll('input[name="category"]:checked'))
+                .map(el => el.value);
+
+            const selectedParts = selectedCategories.map(category => 
+                categories[category][Math.floor(Math.random() * categories[category].length)]
+            );
+            
+            // Trim to ensure exact 26 characters before adding ending
+            let username = selectedParts.join('').slice(0, 26);
+            
+            const randomNumbers = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+            const memorableEnding = memorableEndings[Math.floor(Math.random() * memorableEndings.length)];
+            
+            username += randomNumbers + memorableEnding;
+            
+            const resultDiv = document.getElementById('result');
+            
+            let lengthClass = 'length-error';
+            if (username.length === 30) {
+                lengthClass = 'length-valid';
+            } else if (username.length < 30) {
+                lengthClass = 'length-warning';
+            }
+            
+            resultDiv.innerHTML = `
+                <p>[+] Generated Username: <span class="command">${username}</span></p>
+                <p>[*] Length: <span class="${lengthClass}">${username.length} characters</span></p>
+                <p>[*] Combination: ${selectedParts.join(', ')}</p>
+            `;
+        }
+
+        generateUsername();
+    </script>
+</body>
+</html>
