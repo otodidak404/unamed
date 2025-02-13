@@ -2,114 +2,302 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Username Generator - Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username Generator</title>
     <style>
         body {
-            background-color: black;
-            color: #0F0;
-            font-family: 'Courier New', monospace;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .terminal {
             background-color: #000;
-            border: 2px solid #0F0;
-            padding: 15px;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
             max-width: 800px;
             margin: 0 auto;
-            box-shadow: 0 0 10px rgba(0,255,0,0.5);
         }
-        .prompt {
-            color: #0F0;
+
+        .terminal {
+            background-color: rgba(0, 30, 0, 0.9);
+            border: 1px solid #0f0;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
-        .command {
-            color: #FF0;
+
+        .header {
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .result {
-            color: #0FF;
+
+        .header-status {
+            font-size: 0.9em;
+            color: #0a0;
         }
-        .length-valid {
-            color: #0F0;
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        .length-warning {
-            color: #FF0;
+
+        .length-info {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #0f0;
+            background: rgba(0, 50, 0, 0.3);
         }
-        .length-error {
-            color: #F00;
+
+        .output-area {
+            border: 1px dashed #0f0;
+            padding: 15px;
+            min-height: 200px;
+            margin-top: 20px;
         }
-        input[type="checkbox"] {
-            margin-right: 10px;
+
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .username {
+            margin: 8px 0;
+            padding: 8px;
+            border: 1px solid #030;
+            background: rgba(0, 20, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .username:hover {
+            background: rgba(0, 40, 0, 0.5);
+            border-color: #0f0;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            margin: 10px 0;
+            accent-color: #0f0;
+        }
+
+        .stats {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #0a0;
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .copy-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0f0;
+            color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 0.5s steps(30, end);
         }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <div class="prompt">
-            root@username-generator:~$ <span class="command">./generate_username.sh</span>
-        </div>
-        <div>
-            <p>==== Username Generator v2.0 ====</p>
-            <p>Select Categories:</p>
-            <label><input type="checkbox" name="category" value="prefix" checked>Prefix</label>
-            <label><input type="checkbox" name="category" value="country" checked>Region</label>
-            <label><input type="checkbox" name="category" value="object" checked>Object</label>
-            <label><input type="checkbox" name="category" value="animal" checked>Animal</label>
-            <label><input type="checkbox" name="category" value="vehicle" checked>Vehicle</label>
-        </div>
-        <button onclick="generateUsername()" class="prompt">
-            [GENERATE]
-        </button>
-        <div id="result" class="result"></div>
-        <div class="prompt">
-            root@username-generator:~$ 
+    <div class="container">
+        <div class="terminal">
+            <div class="header">
+                <div>> USERNAME GENERATOR v6.0</div>
+                <div class="header-status" id="statusText">Ready...</div>
+            </div>
+
+            <div class="length-info">
+                Base Name Length: <span id="baseLengthValue">8</span> characters<br>
+                Added Numbers: 2 digits<br>
+                Total Length: <span id="totalLengthValue">10</span> characters
+            </div>
+
+            <div class="controls">
+                <div>
+                    <label>Adjust Base Name Length:</label>
+                    <input type="range" id="lengthSlider" min="3" max="28" value="8">
+                </div>
+                <div class="options">
+                    <button onclick="generateUsernames()">Generate New Usernames</button>
+                    <button onclick="toggleSort()">Toggle Sort</button>
+                </div>
+            </div>
+
+            <div class="output-area" id="outputArea"></div>
         </div>
     </div>
 
+    <div class="copy-message" id="copyMessage">Username copied to clipboard!</div>
+
     <script>
-        const categories = {
-            prefix: ['hebat', 'pintar', 'keren', 'cepat', 'riang', 'teknologi', 'super', 'mega', 'emas'],
-            country: ['nusantara', 'jawa', 'sumatera', 'bali', 'papua'],
-            object: ['laptop', 'kamera', 'ponsel', 'buku', 'jam'],
-            animal: ['kucing', 'anjing', 'kuda', 'gajah', 'harimau'],
-            vehicle: ['kawasaki', 'toyota', 'suzuki', 'mercy', 'bmw', 'honda', 'yamaha', 'harley', 'vespa', 'mitsubishi']
+        // [Previous name database remains the same]
+        const nameDatabase = {
+            prefixes: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
+                      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'],
+            names: {
+                short: ['adi', 'budi', 'chen', 'dian', 'eric', 'finn', 'gary', 'hans', 'ian', 
+                       'jack', 'kent', 'luis', 'mike', 'nina', 'owen', 'paul', 'qian', 'rudi', 
+                       'sean', 'tomi', 'udin', 'vic', 'will', 'xian', 'yudi', 'zack'],
+                medium: ['adrian', 'brian', 'carlos', 'daniel', 'edward', 'franco', 'george', 
+                        'harold', 'indian', 'julian', 'kevin', 'leonard', 'martin', 'nathan', 
+                        'oliver', 'patrick', 'quincy', 'ronald', 'steven', 'thomas', 'ulrich', 
+                        'vincent', 'walter', 'xavier', 'yohan', 'zachary'],
+                long: ['alexander', 'benjamin', 'christian', 'dominick', 'elizabeth', 'frederick', 
+                      'giovanni', 'harrison', 'isabella', 'jonathan', 'katherine', 'leonardo', 
+                      'margaret', 'nathaniel', 'oliveira', 'patricia', 'quentin', 'richard', 
+                      'sebastian', 'theodore', 'valentine', 'william', 'xavier', 'yoshida', 'zacharias']
+            },
+            suffixes: ['son', 'ian', 'er', 'or', 'ar', 'en', 'in', 'an', 'el', 'sky', 'ton', 
+                      'man', 'ley', 'lin', 'min', 'kan', 'wan', 'tan', 'vin', 'win']
         };
 
-        const memorableEndings = ['dev', 'net', 'pro', 'ace', 'gen', 'hub', 'web', 'id'];
+        let sortAscending = true;
+        let generatedUsernames = [];
 
-        function generateUsername() {
-            const selectedCategories = Array.from(document.querySelectorAll('input[name="category"]:checked'))
-                .map(el => el.value);
+        function getNameParts(targetLength) {
+            // [Previous getNameParts function remains the same]
+            let result = '';
+            
+            const getBaseName = () => {
+                if (targetLength <= 4) return nameDatabase.names.short[Math.floor(Math.random() * nameDatabase.names.short.length)];
+                if (targetLength <= 7) return nameDatabase.names.medium[Math.floor(Math.random() * nameDatabase.names.medium.length)];
+                return nameDatabase.names.long[Math.floor(Math.random() * nameDatabase.names.long.length)];
+            };
 
-            const selectedParts = selectedCategories.map(category => 
-                categories[category][Math.floor(Math.random() * categories[category].length)]
-            );
-            
-            // Trim to ensure exact 26 characters before adding ending
-            let username = selectedParts.join('').slice(0, 26);
-            
-            const randomNumbers = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-            const memorableEnding = memorableEndings[Math.floor(Math.random() * memorableEndings.length)];
-            
-            username += randomNumbers + memorableEnding;
-            
-            const resultDiv = document.getElementById('result');
-            
-            let lengthClass = 'length-error';
-            if (username.length === 30) {
-                lengthClass = 'length-valid';
-            } else if (username.length < 30) {
-                lengthClass = 'length-warning';
+            let baseName = getBaseName();
+
+            if (baseName.length > targetLength) {
+                return baseName.substring(0, targetLength);
             }
-            
-            resultDiv.innerHTML = `
-                <p>[+] Generated Username: <span class="command">${username}</span></p>
-                <p>[*] Length: <span class="${lengthClass}">${username.length} characters</span></p>
-                <p>[*] Combination: ${selectedParts.join(', ')}</p>
-            `;
+
+            while (baseName.length < targetLength) {
+                if (baseName.length + 2 <= targetLength) {
+                    const suffix = nameDatabase.suffixes[Math.floor(Math.random() * nameDatabase.suffixes.length)];
+                    if (baseName.length + suffix.length <= targetLength) {
+                        baseName += suffix;
+                        continue;
+                    }
+                }
+                if (baseName.length < targetLength) {
+                    const prefix = nameDatabase.prefixes[Math.floor(Math.random() * nameDatabase.prefixes.length)];
+                    baseName = prefix + baseName;
+                }
+            }
+
+            return baseName.substring(0, targetLength);
         }
 
-        generateUsername();
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const copyMessage = document.getElementById('copyMessage');
+                copyMessage.style.display = 'block';
+                setTimeout(() => {
+                    copyMessage.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        function toggleSort() {
+            sortAscending = !sortAscending;
+            displayUsernames();
+        }
+
+        function generateUsername(baseLength) {
+            const baseName = getNameParts(baseLength);
+            const num1 = Math.floor(Math.random() * 10);
+            const num2 = Math.floor(Math.random() * 10);
+            
+            return {
+                fullUsername: baseName + num1 + num2,
+                baseName: baseName,
+                numbers: `${num1}${num2}`
+            };
+        }
+
+        function displayUsernames() {
+            const outputArea = document.getElementById('outputArea');
+            outputArea.innerHTML = '';
+            
+            const sortedUsernames = [...generatedUsernames].sort((a, b) => {
+                return sortAscending ? 
+                    a.fullUsername.localeCompare(b.fullUsername) : 
+                    b.fullUsername.localeCompare(a.fullUsername);
+            });
+
+            sortedUsernames.forEach(username => {
+                const usernameDiv = document.createElement('div');
+                usernameDiv.className = 'username typing-effect';
+                usernameDiv.onclick = () => copyToClipboard(username.fullUsername);
+                usernameDiv.innerHTML = `
+                    ${username.fullUsername}
+                    <div class="stats">
+                        Base Name (${username.baseName.length}): ${username.baseName} | 
+                        Numbers: ${username.numbers} | 
+                        Total (${username.fullUsername.length}): ${username.fullUsername}
+                        <br>Click to copy
+                    </div>
+                `;
+                outputArea.appendChild(usernameDiv);
+            });
+        }
+
+        function generateUsernames() {
+            const baseLength = parseInt(document.getElementById('lengthSlider').value);
+            document.getElementById('statusText').textContent = 'Generating...';
+            
+            generatedUsernames = [];
+            for (let i = 0; i < 10; i++) {
+                generatedUsernames.push(generateUsername(baseLength));
+            }
+            
+            document.getElementById('statusText').textContent = 'Ready...';
+            displayUsernames();
+        }
+
+        const lengthSlider = document.getElementById('lengthSlider');
+        lengthSlider.addEventListener('input', function() {
+            const baseLength = parseInt(this.value);
+            document.getElementById('baseLengthValue').textContent = baseLength;
+            document.getElementById('totalLengthValue').textContent = baseLength + 2;
+            generateUsernames();
+        });
+
+        // Generate initial usernames
+        generateUsernames();
     </script>
 </body>
 </html>
